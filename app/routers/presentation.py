@@ -6,7 +6,11 @@ from app.models.requests import (
     PresentationRequest
 )
 
+from app.models.presentation import PresentationResponse
+
 from app.services.llm_service import ask_llm
+
+
 
 
 router = APIRouter()
@@ -17,7 +21,10 @@ def generate(request: GenerateRequest):
     return ask_llm(request.prompt)
 
 
-@router.post("/presentation")
+@router.post(
+    "/presentation",
+    response_model=PresentationResponse
+)
 def presentation(request: PresentationRequest):
 
     prompt = f"""
