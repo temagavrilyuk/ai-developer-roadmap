@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import json
 
 from app.models.requests import (
     GenerateRequest,
@@ -28,11 +29,29 @@ def presentation(request: PresentationRequest):
 
 Количество слайдов: {request.slides}
 
-Для каждого слайда укажи:
-1. Заголовок
-2. Основную мысль
+Верни только чистый JSON без markdown-разметки, без ```json, без пояснений и без текста до или после JSON.
 
-Ответ дай на русском языке.
+Пример:
+
+{{
+    "slides": [
+        {{
+            "title": "Название слайда",
+            "description": "Описание"
+        }}
+    ]
+}}
+
+Никакого текста вне JSON.
+Ответ должен начинаться с {{ и заканчиваться }}.
 """
 
-    return ask_llm(prompt)
+    response = ask_llm(prompt)
+
+
+    if response.get("error"):
+        return response
+
+    slides_json = json.loads(response["result"])
+
+    return slides_json
