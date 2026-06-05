@@ -7,10 +7,10 @@ from app.models.requests import (
 )
 
 from app.models.presentation import PresentationResponse
-
+from app.prompts.presentation_prompt import presentation_prompt
+from app.parsers.presentation_parser import parse_presentation_response
 from app.services.llm_service import ask_llm
-
-
+from fastapi.responses import JSONResponse
 
 
 router = APIRouter()
@@ -25,40 +25,22 @@ def generate(request: GenerateRequest):
     "/presentation",
     response_model=PresentationResponse
 )
+
 def presentation(request: PresentationRequest):
 
-    prompt = f"""
-Создай структуру презентации.
-
-Тема: {request.topic}
-
-Целевая аудитория: {request.audience}
-
-Количество слайдов: {request.slides}
-
-Верни только чистый JSON без markdown-разметки, без ```json, без пояснений и без текста до или после JSON.
-
-Пример:
-
-{{
-    "slides": [
-        {{
-            "title": "Название слайда",
-            "description": "Описание"
-        }}
-    ]
-}}
-
-Никакого текста вне JSON.
-Ответ должен начинаться с {{ и заканчиваться }}.
-"""
-
+    prompt = presentation_prompt.format(
+    topic=request.topic,
+    audience=request.audience,
+    slides=request.slides
+)
     response = ask_llm(prompt)
 
+    parsed_response = parse_presentation_response(response)
 
-    if response.get("error"):
-        return response
+    if parsed_response.get("error"):
+        return JSONResponse(
+            status_code=502,
+            content=parsed_response
+        )
 
-    slides_json = json.loads(response["result"])
-
-    return slides_json
+    return parsed_response
