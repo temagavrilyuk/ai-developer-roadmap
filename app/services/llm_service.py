@@ -20,6 +20,10 @@ def ask_llm(prompt: str):
                     "content": prompt
                 }
             ]
+        },
+        proxies={
+            "http": None,
+            "https": None,
         }
     )
 
@@ -27,7 +31,9 @@ def ask_llm(prompt: str):
 
     if "choices" not in data:
         return {
-            "error": data
+            "error": True,
+            "message": "LLM provider error",
+            "details": data
         }
 
     return {
